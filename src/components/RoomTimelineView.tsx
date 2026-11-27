@@ -42,7 +42,9 @@ import type {
   Room,
   RoomBlock,
 } from '../types/domain';
+import { useMediaQuery } from '../hooks/useMediaQuery';
 import type { BookingDraftPreset } from './BookingFormModal';
+import { Campus3DFloorplan } from './Campus3DFloorplan';
 import { FloorplanRoomMap } from './FloorplanRoomMap';
 import type { RoomBlockDraftPreset } from './RoomBlockModal';
 import { SmartDateInput } from './SmartDateInput';
@@ -145,6 +147,7 @@ export function RoomTimelineView({
   onNotifyError,
 }: RoomTimelineViewProps) {
   const todayISO = getTodayISO();
+  const isTabletOrDesktop = useMediaQuery('(min-width: 768px)');
   const [displayMode, setDisplayMode] = useState<GridDisplayMode>('grid');
   const [selectedScale, setSelectedScale] = useState<GanttScale | null>(null);
   const scale: GanttScale = selectedScale ?? (isDesktop ? 'fortnight' : 'week');
@@ -870,223 +873,253 @@ export function RoomTimelineView({
       </div>
 
       {/* ==================== ARCHITECTURAL FLOORPLAN SINGLE-DAY VIEW ==================== */}
-      {displayMode === 'floorplan' ? (
-        <div className="preno-floorplan-wrap">
-          <div className="preno-fp-container">
-            <div className="preno-fp-summary tabular-nums">
-              <span>
-                {formatShortDateZh(anchorDate, WEEKDAY_ZH)} 住房狀況：已訂{' '}
-                <strong>{floorplanData.stayMap.size}</strong> / {activeRooms.length} 間
-              </span>
-              {floorplanData.blockMap.size > 0 && (
-                <span>
-                  鎖房 <strong>{floorplanData.blockMap.size}</strong> 間
-                </span>
-              )}
-              <span>
-                空房{' '}
-                <strong style={{ color: 'var(--brand-teal-ink)' }}>
-                  {Math.max(
-                    0,
-                    activeRooms.length -
-                      floorplanData.stayMap.size -
-                      floorplanData.blockMap.size
-                  )}{' '}
-                  間
-                </strong>
-              </span>
-            </div>
+      {displayMode === 'floorplan' ? (() => {
+        const renderFlatRoomTile = (room: Room) => {
+          const staying = floorplanData.stayMap.get(room.id);
+          const departing = floorplanData.departMap.get(room.id);
+          const activeBlock = floorplanData.blockMap.get(room.id);
+          const isDirty = room.housekeepingStatus === 'dirty';
 
-            <FloorplanRoomMap
-              rooms={activeRooms}
-              renderRoom={(room) => {
-                const staying = floorplanData.stayMap.get(room.id);
-                const departing = floorplanData.departMap.get(room.id);
-                const activeBlock = floorplanData.blockMap.get(room.id);
-                const isDirty = room.housekeepingStatus === 'dirty';
-
-                const broomBtn = (
-                  <button
-                    type="button"
-                    className={`preno-broom-btn preno-fp-broom ${
-                      isDirty ? 'is-dirty' : 'is-clean'
-                    }`}
-                    title={`${HOUSEKEEPING_LABELS[room.housekeepingStatus]}（點擊切換）`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      void onToggleHousekeeping(
-                        room.id,
-                        isDirty ? 'clean' : 'dirty'
-                      );
-                    }}
-                  >
-                    <BroomIcon size={13} />
-                  </button>
-                );
-
-                if (!staying && activeBlock) {
-                  return (
-                    <div
-                      className="preno-fp-tile is-blocked"
-                      role="button"
-                      tabIndex={0}
-                      onClick={() => onInspectRoomBlock(activeBlock)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault();
-                          onInspectRoomBlock(activeBlock);
-                        }
-                      }}
-                    >
-                      <div className="preno-fp-top">
-                        <strong className="preno-fp-code">{room.code}</strong>
-                        {broomBtn}
-                      </div>
-                      <div className="preno-fp-mid">
-                        <Lock size={12} style={{ flexShrink: 0 }} />
-                        <span className="preno-fp-ellipsis">
-                          {activeBlock.reason}
-                        </span>
-                      </div>
-                      <div className="preno-fp-bot fp-hide-mobile tabular-nums">
-                        <span>鎖房中</span>
-                        <span>
-                          至 {formatShortDateZh(activeBlock.endDate, WEEKDAY_ZH)}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                }
-
-                if (!staying) {
-                  return (
-                    <div
-                      className="preno-fp-tile is-vacant"
-                      role="button"
-                      tabIndex={0}
-                      onClick={() =>
-                        onCreateBookingAt({
-                          roomIds: [room.id],
-                          checkInDate: anchorDate,
-                          checkOutDate: addDaysISO(anchorDate, 1),
-                        })
-                      }
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault();
-                          onCreateBookingAt({
-                            roomIds: [room.id],
-                            checkInDate: anchorDate,
-                            checkOutDate: addDaysISO(anchorDate, 1),
-                          });
-                        }
-                      }}
-                    >
-                      <div className="preno-fp-top">
-                        <strong className="preno-fp-code">{room.code}</strong>
-                        {broomBtn}
-                      </div>
-                      {departing ? (
-                        <div
-                          className="preno-fp-turnover"
-                          title={`上午退房：${departing.guestName}`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onInspectBooking(departing);
-                          }}
-                        >
-                          退：{departing.guestName}
-                        </div>
-                      ) : (
-                        <div className="preno-fp-vacant-cta">
-                          <span>空房</span>
-                        </div>
-                      )}
-                      <div className="preno-fp-bot fp-hide-mobile tabular-nums">
-                        <span>{room.standardCapacity}人房</span>
-                        <span>${room.standardRate.toLocaleString()}</span>
-                      </div>
-                    </div>
-                  );
-                }
-
-                const depState = getDepositTrackingState(staying, todayISO);
-                const balance = getBalanceDue(staying);
-                const barCls = resolveBarColorClass(staying);
-
-                return (
-                  <div
-                    className={`preno-fp-tile is-occupied ${barCls}`}
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => onInspectBooking(staying)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        onInspectBooking(staying);
-                      }
-                    }}
-                  >
-                    <div className="preno-fp-top">
-                      <strong className="preno-fp-code">{room.code}</strong>
-                      {broomBtn}
-                    </div>
-                    {departing && departing.id !== staying.id && (
-                      <div
-                        className="preno-fp-turnover fp-hide-mobile"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onInspectBooking(departing);
-                        }}
-                      >
-                        退：{departing.guestName} → 入：{staying.guestName}
-                      </div>
-                    )}
-                    <div className="preno-fp-guest">{staying.guestName}</div>
-                    <div className="preno-fp-bot fp-hide-mobile tabular-nums">
-                      <span>
-                        {depState === 'deposit_overdue'
-                          ? '逾期未匯'
-                          : BOOKING_STATUS_LABELS[staying.status]}
-                      </span>
-                      <strong>
-                        {balance > 0 ? `尾 $${balance.toLocaleString()}` : '已付清'}
-                      </strong>
-                    </div>
-                  </div>
+          const broomBtn = (
+            <button
+              type="button"
+              className={`preno-broom-btn preno-fp-broom ${
+                isDirty ? 'is-dirty' : 'is-clean'
+              }`}
+              title={`${HOUSEKEEPING_LABELS[room.housekeepingStatus]}（點擊切換）`}
+              onClick={(e) => {
+                e.stopPropagation();
+                void onToggleHousekeeping(
+                  room.id,
+                  isDirty ? 'clean' : 'dirty'
                 );
               }}
-            />
+            >
+              <BroomIcon size={13} />
+            </button>
+          );
 
-            <div className="preno-fp-legend">
-              <span className="preno-legend-item">
-                <span className="preno-swatch is-vacant-swatch" />
-                空房
-              </span>
-              <span className="preno-legend-item">
-                <span className="preno-swatch bar-blue" />
-                已確認
-              </span>
-              <span className="preno-legend-item">
-                <span className="preno-swatch bar-green" />
-                已入住
-              </span>
-              <span className="preno-legend-item">
-                <span className="preno-swatch bar-amber" />
-                待付訂金
-              </span>
-              <span className="preno-legend-item">
-                <span className="preno-swatch bar-red" />
-                逾期未匯
-              </span>
-              <span className="preno-legend-item">
-                <span className="preno-swatch is-hatched" />
-                鎖房
-              </span>
+          if (!staying && activeBlock) {
+            return (
+              <div
+                className="preno-fp-tile is-blocked"
+                role="button"
+                tabIndex={0}
+                onClick={() => onInspectRoomBlock(activeBlock)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    onInspectRoomBlock(activeBlock);
+                  }
+                }}
+              >
+                <div className="preno-fp-top">
+                  <strong className="preno-fp-code">{room.code}</strong>
+                  {broomBtn}
+                </div>
+                <div className="preno-fp-mid">
+                  <Lock size={12} style={{ flexShrink: 0 }} />
+                  <span className="preno-fp-ellipsis">
+                    {activeBlock.reason}
+                  </span>
+                </div>
+                <div className="preno-fp-bot fp-hide-mobile tabular-nums">
+                  <span>鎖房中</span>
+                  <span>
+                    至 {formatShortDateZh(activeBlock.endDate, WEEKDAY_ZH)}
+                  </span>
+                </div>
+              </div>
+            );
+          }
+
+          if (!staying) {
+            return (
+              <div
+                className="preno-fp-tile is-vacant"
+                role="button"
+                tabIndex={0}
+                onClick={() =>
+                  onCreateBookingAt({
+                    roomIds: [room.id],
+                    checkInDate: anchorDate,
+                    checkOutDate: addDaysISO(anchorDate, 1),
+                  })
+                }
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    onCreateBookingAt({
+                      roomIds: [room.id],
+                      checkInDate: anchorDate,
+                      checkOutDate: addDaysISO(anchorDate, 1),
+                    });
+                  }
+                }}
+              >
+                <div className="preno-fp-top">
+                  <strong className="preno-fp-code">{room.code}</strong>
+                  {broomBtn}
+                </div>
+                {departing ? (
+                  <div
+                    className="preno-fp-turnover"
+                    title={`上午退房：${departing.guestName}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onInspectBooking(departing);
+                    }}
+                  >
+                    退：{departing.guestName}
+                  </div>
+                ) : (
+                  <div className="preno-fp-vacant-cta">
+                    <span>空房</span>
+                  </div>
+                )}
+                <div className="preno-fp-bot fp-hide-mobile tabular-nums">
+                  <span>{room.standardCapacity}人房</span>
+                  <span>${room.standardRate.toLocaleString()}</span>
+                </div>
+              </div>
+            );
+          }
+
+          const depState = getDepositTrackingState(staying, todayISO);
+          const balance = getBalanceDue(staying);
+          const barCls = resolveBarColorClass(staying);
+
+          return (
+            <div
+              className={`preno-fp-tile is-occupied ${barCls}`}
+              role="button"
+              tabIndex={0}
+              onClick={() => onInspectBooking(staying)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  onInspectBooking(staying);
+                }
+              }}
+            >
+              <div className="preno-fp-top">
+                <strong className="preno-fp-code">{room.code}</strong>
+                {broomBtn}
+              </div>
+              {departing && departing.id !== staying.id && (
+                <div
+                  className="preno-fp-turnover fp-hide-mobile"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onInspectBooking(departing);
+                  }}
+                >
+                  退：{departing.guestName} → 入：{staying.guestName}
+                </div>
+              )}
+              <div className="preno-fp-guest">{staying.guestName}</div>
+              <div className="preno-fp-bot fp-hide-mobile tabular-nums">
+                <span>
+                  {depState === 'deposit_overdue'
+                    ? '逾期未匯'
+                    : BOOKING_STATUS_LABELS[staying.status]}
+                </span>
+                <strong>
+                  {balance > 0 ? `尾 $${balance.toLocaleString()}` : '已付清'}
+                </strong>
+              </div>
+            </div>
+          );
+        };
+
+        return (
+          <div className="preno-floorplan-wrap">
+            <div
+              className={`preno-fp-container ${
+                isTabletOrDesktop ? 'is-campus3d' : ''
+              }`}
+            >
+              <div className="preno-fp-summary tabular-nums">
+                <span>
+                  {formatShortDateZh(anchorDate, WEEKDAY_ZH)} 住房狀況：已訂{' '}
+                  <strong>{floorplanData.stayMap.size}</strong> / {activeRooms.length} 間
+                </span>
+                {floorplanData.blockMap.size > 0 && (
+                  <span>
+                    鎖房 <strong>{floorplanData.blockMap.size}</strong> 間
+                  </span>
+                )}
+                <span>
+                  空房{' '}
+                  <strong style={{ color: 'var(--brand-teal-ink)' }}>
+                    {Math.max(
+                      0,
+                      activeRooms.length -
+                        floorplanData.stayMap.size -
+                        floorplanData.blockMap.size
+                    )}{' '}
+                    間
+                  </strong>
+                </span>
+              </div>
+
+              {isTabletOrDesktop ? (
+                <Campus3DFloorplan
+                  rooms={activeRooms}
+                  stayMap={floorplanData.stayMap}
+                  departMap={floorplanData.departMap}
+                  blockMap={floorplanData.blockMap}
+                  todayISO={todayISO}
+                  resolveBarColorClass={resolveBarColorClass}
+                  onSelectVacant={(room) =>
+                    onCreateBookingAt({
+                      roomIds: [room.id],
+                      checkInDate: anchorDate,
+                      checkOutDate: addDaysISO(anchorDate, 1),
+                    })
+                  }
+                  onInspectBooking={onInspectBooking}
+                  onInspectRoomBlock={onInspectRoomBlock}
+                  onToggleHousekeeping={onToggleHousekeeping}
+                  renderExtraRoom={renderFlatRoomTile}
+                />
+              ) : (
+                <FloorplanRoomMap
+                  rooms={activeRooms}
+                  renderRoom={renderFlatRoomTile}
+                />
+              )}
+
+              <div className="preno-fp-legend">
+                <span className="preno-legend-item">
+                  <span className="preno-swatch is-vacant-swatch" />
+                  空房
+                </span>
+                <span className="preno-legend-item">
+                  <span className="preno-swatch bar-blue" />
+                  已確認
+                </span>
+                <span className="preno-legend-item">
+                  <span className="preno-swatch bar-green" />
+                  已入住
+                </span>
+                <span className="preno-legend-item">
+                  <span className="preno-swatch bar-amber" />
+                  待付訂金
+                </span>
+                <span className="preno-legend-item">
+                  <span className="preno-swatch bar-red" />
+                  逾期未匯
+                </span>
+                <span className="preno-legend-item">
+                  <span className="preno-swatch is-hatched" />
+                  鎖房
+                </span>
+              </div>
             </div>
           </div>
-        </div>
-      ) : (
+        );
+      })() : (
         /* ==================== AUTHENTIC PRENO FULL-WHITE GRID ==================== */
         <>
           <div

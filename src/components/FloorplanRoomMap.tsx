@@ -9,26 +9,26 @@ interface FloorplanRoomMapProps {
 }
 
 const XINYUE_FLOOR_BLUEPRINT = [
-  { floor: '3F', leftCodes: ['E', 'E1'], rightCodes: ['F'] },
-  { floor: '2F', leftCodes: ['C', 'C1'], rightCodes: ['D', 'D1'] },
-  { floor: '1F', leftCodes: ['A', 'A1'], rightCodes: ['B', 'B1'] },
+  { floor: '3F', backCodes: ['E1'], frontCodes: ['E', 'F'] },
+  { floor: '2F', backCodes: ['C1', 'D1'], frontCodes: ['C', 'D'] },
+  { floor: '1F', backCodes: ['A1', 'B1'], frontCodes: ['A', 'B'] },
 ] as const;
 
-const YOUDE_ROW_BLUEPRINT = [
-  ['獨棟別墅', '獨棟木屋'],
-  ['景觀四人兩房木屋'],
-] as const;
+const YOUDE_UPPER_CODES = ['獨棟別墅', '獨棟木屋'] as const;
+const YOUDE_LOWER_CODES = ['景觀四人兩房木屋'] as const;
 
 /**
- * Renders guesthouse rooms in an architectural elevation layout (Option A):
- * - Xinyue Main Lodge: 3-story pitched-roof elevation with distinct floor slabs & central stairwell
- *     3F: [E][E1] | 樓梯 | [F][露台]
- *     2F: [C][C1] | 樓梯 | [D][D1]
- *     1F: [A][A1] | 樓梯 | [B][B1]
- * - Youde Garden: Standalone gable-roof wooden cabin silhouettes
- *     Row 1: 獨棟別墅, 獨棟木屋
- *     Row 2: 景觀四人兩房木屋
- * Keeps true spatial geometry across desktop, tablet, and mobile without horizontal distortion.
+ * Renders guesthouse rooms in an authentic minimalist elevation layout (Option A):
+ * - Xinyue Main Lodge: Modern 3-story Zen flat-roof building with central rooftop stair tower,
+ *   horizontal parapet wood slats, right full-height vertical louver strip, and signature 2F left frame.
+ *   Each floor clearly separates Back (後・樹林) above Front (前・山景):
+ *     3F: Back [E1 full-width] / Front [E][F] (no balcony)
+ *     2F: Back [C1][D1]        / Front [C (framed)][D]
+ *     1F: Back [A1][B1]        / Front [A][B]
+ * - Youde Garden:
+ *     Upper: [獨棟別墅][獨棟木屋]
+ *     Single-line divider: ─── 大觀景平台 ───
+ *     Lower: [景觀四人兩房木屋]
  */
 export function FloorplanRoomMap({
   rooms,
@@ -48,13 +48,16 @@ export function FloorplanRoomMap({
 
   const xinyueRows = XINYUE_FLOOR_BLUEPRINT.map((row) => ({
     floor: row.floor,
-    left: row.leftCodes.map(takeRoom).filter((r): r is Room => Boolean(r)),
-    right: row.rightCodes.map(takeRoom).filter((r): r is Room => Boolean(r)),
-  })).filter((row) => row.left.length > 0 || row.right.length > 0);
+    back: row.backCodes.map(takeRoom).filter((r): r is Room => Boolean(r)),
+    front: row.frontCodes.map(takeRoom).filter((r): r is Room => Boolean(r)),
+  })).filter((row) => row.back.length > 0 || row.front.length > 0);
 
-  const youdeRows = YOUDE_ROW_BLUEPRINT.map((codes) =>
-    codes.map(takeRoom).filter((r): r is Room => Boolean(r))
-  ).filter((row) => row.length > 0);
+  const youdeUpper = YOUDE_UPPER_CODES.map(takeRoom).filter((r): r is Room =>
+    Boolean(r)
+  );
+  const youdeLower = YOUDE_LOWER_CODES.map(takeRoom).filter((r): r is Room =>
+    Boolean(r)
+  );
 
   const extraXinyue = rooms.filter(
     (r) => r.building === 'xinyue' && !placedIds.has(r.id)
@@ -65,146 +68,160 @@ export function FloorplanRoomMap({
 
   return (
     <div className={`arch-map-shell ${compact ? 'is-compact' : ''}`}>
-      {/* ==================== XINYUE 3-STORY MAIN LODGE ELEVATION ==================== */}
+      {/* ==================== XINYUE MODERN ZEN FLAT-ROOF ELEVATION ==================== */}
       {(xinyueRows.length > 0 || extraXinyue.length > 0) && (
         <div className="arch-lodge">
-          {/* Minimalist Architectural Pitched Roof Silhouette */}
-          <div className="arch-lodge-roof" aria-hidden="true">
-            <svg
-              viewBox="0 0 800 44"
-              preserveAspectRatio="none"
-              className="arch-roof-svg"
-            >
-              <polygon
-                points="4,43 400,4 796,43"
-                className="arch-roof-fill"
-              />
-              <polyline
-                points="2,43 400,4 798,43"
-                className="arch-roof-stroke"
-              />
-            </svg>
-            <span className="arch-roof-title">{BUILDING_LABELS.xinyue}</span>
+          {/* Authentic Flat-Roof Silhouette: Rooftop Stair Tower + Wood-Slat Parapet */}
+          <div className="arch-zen-roof" aria-hidden="true">
+            <div className="arch-zen-tower">
+              <span className="arch-zen-title">{BUILDING_LABELS.xinyue}</span>
+            </div>
+            <div className="arch-zen-parapet" />
           </div>
 
-          {/* 3-Story Structural Body */}
-          <div className="arch-lodge-body">
-            {xinyueRows.map((row, rowIdx) => (
-              <div
-                key={row.floor}
-                className={`arch-floor-slab ${
-                  rowIdx === xinyueRows.length - 1 ? 'is-ground' : ''
-                }`}
-              >
-                <div className="arch-floor-badge">{row.floor}</div>
+          {/* 3-Story Structural Body with Right Vertical Wood-Slat Column */}
+          <div className="arch-zen-frame">
+            <div className="arch-lodge-body">
+              {xinyueRows.map((row, rowIdx) => (
+                <div
+                  key={row.floor}
+                  className={`arch-floor-slab ${
+                    rowIdx === xinyueRows.length - 1 ? 'is-ground' : ''
+                  }`}
+                >
+                  <div className="arch-floor-badge">{row.floor}</div>
 
-                <div className="arch-floor-wings">
-                  {/* Left Wing (4-person room slightly wider than 2-person connecting room) */}
-                  <div className="arch-wing">
-                    {row.left.map((room) => (
-                      <div key={room.id} className="arch-room-slot">
-                        {renderRoom(room)}
+                  <div className="arch-floor-depth">
+                    {/* Back Row (後・樹林) — E1 spans full width on 3F */}
+                    {row.back.length > 0 && (
+                      <div className="arch-depth-band is-back">
+                        <span className="arch-depth-tag">後・樹林</span>
+                        <div
+                          className={`arch-depth-rooms ${
+                            row.back.length === 1 ? 'is-full' : ''
+                          }`}
+                        >
+                          {row.back.map((room) => (
+                            <div key={room.id} className="arch-room-slot">
+                              {renderRoom(room)}
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    ))}
-                  </div>
+                    )}
 
-                  {/* Central Stairwell Shaft */}
-                  <div className="arch-stairwell" aria-label="樓梯間">
-                    <div className="arch-stair-steps" aria-hidden="true" />
-                    <span className="arch-stair-label">樓梯</span>
-                  </div>
-
-                  {/* Right Wing (keep 2-slot proportion; 3F right slot shows subtle balcony placeholder) */}
-                  <div className="arch-wing">
-                    {row.right.map((room) => (
-                      <div key={room.id} className="arch-room-slot">
-                        {renderRoom(room)}
-                      </div>
-                    ))}
-                    {row.right.length === 1 && (
-                      <div className="arch-balcony-slot" aria-hidden="true">
-                        <span>景觀露台</span>
+                    {/* Front Row (前・山景) — 2F Left (C) carries signature concrete frame */}
+                    {row.front.length > 0 && (
+                      <div className="arch-depth-band is-front">
+                        <span className="arch-depth-tag">前・山景</span>
+                        <div className="arch-depth-rooms">
+                          {row.front.map((room) => (
+                            <div
+                              key={room.id}
+                              className={`arch-room-slot ${
+                                row.floor === '2F' && room.code === 'C'
+                                  ? 'is-zen-framed'
+                                  : ''
+                              }`}
+                            >
+                              {renderRoom(room)}
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
 
-            {extraXinyue.length > 0 && (
-              <div className="arch-extra-floor">
-                <div className="arch-floor-badge">增</div>
-                <div className="arch-extra-grid">
-                  {extraXinyue.map((room) => (
-                    <div key={room.id} className="arch-room-slot">
-                      {renderRoom(room)}
-                    </div>
-                  ))}
+              {extraXinyue.length > 0 && (
+                <div className="arch-extra-floor">
+                  <div className="arch-floor-badge">增</div>
+                  <div className="arch-extra-grid">
+                    {extraXinyue.map((room) => (
+                      <div key={room.id} className="arch-room-slot">
+                        {renderRoom(room)}
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
+
+            {/* Signature Full-Height Right Vertical Wood-Slat Louver Strip */}
+            <div className="arch-zen-right-slats" aria-hidden="true" />
           </div>
 
           <div className="arch-lodge-foundation" aria-hidden="true" />
         </div>
       )}
 
-      {/* ==================== YOUDE GARDEN STANDALONE WOODEN CABINS ==================== */}
-      {(youdeRows.length > 0 || extraYoude.length > 0) && (
+      {/* ==================== YOUDE GARDEN: UPPER CABINS / SINGLE-LINE DECK / LOWER CABIN ==================== */}
+      {(youdeUpper.length > 0 ||
+        youdeLower.length > 0 ||
+        extraYoude.length > 0) && (
         <div className="arch-youde-zone">
           <div className="arch-youde-header">
             <span>{BUILDING_LABELS.youde}</span>
-            <span className="arch-youde-sub">獨棟庭園木屋</span>
+            <span className="arch-youde-sub">上層獨棟・下層觀景木屋</span>
           </div>
 
           <div className="arch-youde-rows">
-            {youdeRows.map((row, idx) => (
-              <div key={idx} className="arch-youde-row">
-                {row.map((room) => (
+            {youdeUpper.length > 0 && (
+              <div className="arch-youde-row">
+                {youdeUpper.map((room) => (
                   <div key={room.id} className="arch-cabin-unit">
                     <svg
-                      viewBox="0 0 240 20"
+                      viewBox="0 0 240 18"
                       preserveAspectRatio="none"
                       className="arch-cabin-roof-svg"
                       aria-hidden="true"
                     >
                       <polygon
-                        points="4,19 120,2 236,19"
-                        className="arch-cabin-roof-fill"
+                        points="4,17 120,2 236,17"
+                        className={
+                          room.code === '獨棟別墅'
+                            ? 'arch-cabin-roof-villa'
+                            : 'arch-cabin-roof-fill'
+                        }
                       />
                       <polyline
-                        points="2,19 120,2 238,19"
-                        className="arch-cabin-roof-stroke"
+                        points="2,17 120,2 238,17"
+                        className={
+                          room.code === '獨棟別墅'
+                            ? 'arch-cabin-roof-stroke-villa'
+                            : 'arch-cabin-roof-stroke'
+                        }
                       />
                     </svg>
                     <div className="arch-cabin-body">{renderRoom(room)}</div>
                   </div>
                 ))}
-                {row.length === 1 && (
-                  <div className="arch-cabin-spacer" aria-hidden="true" />
-                )}
               </div>
-            ))}
+            )}
+
+            {/* Single Minimalist Line for 大觀景平台 */}
+            {youdeLower.length > 0 && (
+              <div className="arch-deck-line" aria-hidden="true">
+                <span>大觀景平台</span>
+              </div>
+            )}
+
+            {/* Lower Terrace: 景觀四人兩房木屋 right below viewing deck line */}
+            {youdeLower.length > 0 && (
+              <div className="arch-youde-lower">
+                {youdeLower.map((room) => (
+                  <div key={room.id} className="arch-room-slot">
+                    {renderRoom(room)}
+                  </div>
+                ))}
+              </div>
+            )}
 
             {extraYoude.length > 0 && (
               <div className="arch-youde-row">
                 {extraYoude.map((room) => (
                   <div key={room.id} className="arch-cabin-unit">
-                    <svg
-                      viewBox="0 0 240 20"
-                      preserveAspectRatio="none"
-                      className="arch-cabin-roof-svg"
-                      aria-hidden="true"
-                    >
-                      <polygon
-                        points="4,19 120,2 236,19"
-                        className="arch-cabin-roof-fill"
-                      />
-                      <polyline
-                        points="2,19 120,2 238,19"
-                        className="arch-cabin-roof-stroke"
-                      />
-                    </svg>
                     <div className="arch-cabin-body">{renderRoom(room)}</div>
                   </div>
                 ))}

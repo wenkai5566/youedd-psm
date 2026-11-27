@@ -4,6 +4,7 @@ import {
   INITIAL_XINYUE_ROOMS,
 } from '../constants/seedData';
 import {
+  compareRoomsAlphabetically,
   findBookingConflict,
   findConflictForRoomBlock,
   findRoomBlockConflictForBooking,
@@ -87,7 +88,7 @@ export function createDemoRepository(): GuesthouseRepository {
       () => INITIAL_XINYUE_ROOMS
     )
       .map(normalizeRoomRecord)
-      .sort((a, b) => a.sortOrder - b.sortOrder);
+      .sort(compareRoomsAlphabetically);
 
   const getBookings = (): Booking[] =>
     readJson<Array<Booking & { roomId?: string }>>(STORAGE_KEY_BOOKINGS, () =>

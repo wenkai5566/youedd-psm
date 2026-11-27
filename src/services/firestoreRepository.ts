@@ -20,6 +20,7 @@ import {
 import { INITIAL_XINYUE_ROOMS } from '../constants/seedData';
 import {
   buildNightLockId,
+  compareRoomsAlphabetically,
   enumerateOccupiedNights,
   formatTaiwanPhone,
   isValidDateISO,
@@ -242,12 +243,14 @@ export function createFirestoreRepository(): GuesthouseRepository {
       return onSnapshot(
         q,
         (snapshot) => {
-          const rooms = snapshot.docs.map((d) =>
-            normalizeRoomRecord({
-              ...(d.data() as Partial<Room>),
-              id: d.id,
-            })
-          );
+          const rooms = snapshot.docs
+            .map((d) =>
+              normalizeRoomRecord({
+                ...(d.data() as Partial<Room>),
+                id: d.id,
+              })
+            )
+            .sort(compareRoomsAlphabetically);
           onChange(rooms);
         },
         (error) => onError?.(error)

@@ -516,6 +516,31 @@ export function normalizeRoomRecord(
 }
 
 /**
+ * Sorts rooms alphabetically for non-floorplan views (Gantt, Calendar, Booking picker, Housekeeping):
+ * - Xinyue Main Lodge first, sorted naturally by room code (A, A1, B, B1, C, C1, D, D1, E, E1, F...)
+ * - Youde Garden second, sorted by sortOrder then code
+ */
+export function compareRoomsAlphabetically(a: Room, b: Room): number {
+  if (a.building !== b.building) {
+    return a.building === 'xinyue' ? -1 : 1;
+  }
+  if (a.building === 'xinyue') {
+    const codeCmp = a.code.localeCompare(b.code, 'zh-Hant-TW', {
+      numeric: true,
+      sensitivity: 'base',
+    });
+    if (codeCmp !== 0) return codeCmp;
+  }
+  if (a.sortOrder !== b.sortOrder) {
+    return a.sortOrder - b.sortOrder;
+  }
+  return a.code.localeCompare(b.code, 'zh-Hant-TW', {
+    numeric: true,
+    sensitivity: 'base',
+  });
+}
+
+/**
  * Normalizes legacy booking records into the current schema cleanly.
  */
 export function normalizeBookingRecord(

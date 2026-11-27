@@ -1,6 +1,6 @@
-# 侑德心悅・侑德園｜內部訂房管理系統（Guesthouse Booking Management System）
+# 侑德訂房（youedd-psm）｜侑德心悅・侑德園 內部訂房管理系統
 
-專為 **拉拉山・侑德心悅、侑德園民宿**（最多 15 間房 / 5 位工作人員）設計的跨裝置內部訂房與房務管理 PWA Web App。
+專為 **拉拉山・侑德心悅、侑德園民宿** 設計的跨裝置內部訂房與房務管理 PWA Web App（Pure Native Preno 介面風格）。
 
 ## 架構與技術選型
 
@@ -10,18 +10,18 @@
   - 前端表單即時偵測並標記衝突房型。
   - 後端透過 Firestore Atomic Transaction（`runTransaction`）寫入每晚房鎖文件 `roomNightLocks/{roomId}_{YYYY-MM-DD}`，即使多名員工同時操作也絕不會重複訂房；取消訂房時原子釋放房鎖。
 - **帳號白名單安全控管**：
-  - Firebase Authentication（Google 登入）+ `firestore.rules` 資料庫層級強制驗證（上限 5 組已驗證 Google Email），未授權帳號無法讀取或寫入任何旅客資料。
+  - Firebase Authentication（Google 登入）+ `firestore.rules` 資料庫層級強制驗證（支援無上限管理授權人員 Email），未授權帳號無法讀取或寫入任何旅客資料。
 
 ## 本機開發與即時預覽
 
-未建立 `.env` 時，系統會自動以 **本機即時預覽模式** 啟動（使用 `localStorage` + `BroadcastChannel` 跨分頁即時同步，並預載官網 [xinyue.tw](https://www.xinyue.tw/) 的 15 間房型與展示訂房）：
+未建立 `.env` 時，系統會自動以 **本機即時預覽模式** 啟動（使用 `localStorage` + `BroadcastChannel` 跨分頁即時同步，並預載官網 [xinyue.tw](https://www.xinyue.tw/) 的 15 間實體房型與展示訂房）：
 
 ```bash
 npm install
 npm run dev
 ```
 
-執行單元測試（驗證防重複訂房、平假日房價試算、尾款計算與白名單上限檢查）：
+執行單元測試（驗證防重複訂房、平假日房價試算、尾款計算與白名單檢查）：
 
 ```bash
 npm test
@@ -32,7 +32,7 @@ npm test
 1. 於 [Firebase Console](https://console.firebase.google.com/) 建立專案。
 2. 啟用 **Authentication → Sign-in method → Google**。
 3. 建立 **Cloud Firestore** 資料庫（建議選擇 `asia-east1` 台灣區域）。
-4. 編輯 [`firestore.rules`](./firestore.rules) 中的 `isInBootstrapWhitelist()`，填入最多 5 位工作人員的實際 Google Email，然後部署安全規則與索引：
+4. 編輯 [`firestore.rules`](./firestore.rules) 中的 `isInBootstrapWhitelist()`，填入授權工作人員的 Google Email，然後部署安全規則與索引：
    ```bash
    firebase deploy --only firestore:rules,firestore:indexes
    ```

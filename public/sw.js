@@ -1,5 +1,5 @@
 /* Service worker for offline shell support and PWA installation */
-const CACHE_NAME = 'xinyue-pms-shell-v2';
+const CACHE_NAME = 'youedd-psm-shell-v3';
 const APP_SHELL_ASSETS = [
   './',
   './manifest.webmanifest',

@@ -10,7 +10,7 @@ import type {
 export const APP_BRAND = {
   title: '侑德心悅・侑德園',
   subtitle: '拉拉山民宿訂房管理系統',
-  shortTitle: '侑德心悅',
+  shortTitle: '侑德訂房',
 } as const;
 
 export const BANK_REMITTANCE_INFO = {

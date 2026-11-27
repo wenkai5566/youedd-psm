@@ -1,6 +1,10 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import { AlertTriangle, Check, Lock, RotateCcw, UserCheck, X } from 'lucide-react';
-import { BOOKING_STATUS_LABELS, WEEKDAY_ZH } from '../constants/labels';
+import {
+  BOOKING_STATUS_LABELS,
+  BUILDING_LABELS,
+  WEEKDAY_ZH,
+} from '../constants/labels';
 import {
   addDaysISO,
   calculateRoomOptionStayPrice,
@@ -25,7 +29,6 @@ import type {
   RoomAllocation,
   RoomBlock,
 } from '../types/domain';
-import { FloorplanRoomMap } from './FloorplanRoomMap';
 import { SmartDateInput } from './SmartDateInput';
 
 export interface BookingDraftPreset {
@@ -526,7 +529,7 @@ export function BookingFormModal({
               <div className="field-group">
                 <div className="field-label">
                   <span>
-                    點選平面房位（可複選）<span className="field-required">*</span>
+                    點選房間（可複選）<span className="field-required">*</span>
                   </span>
                   <span
                     className="tabular-nums"
@@ -536,10 +539,8 @@ export function BookingFormModal({
                   </span>
                 </div>
 
-                <FloorplanRoomMap
-                  rooms={activeRooms}
-                  compact
-                  renderRoom={(room) => {
+                {(() => {
+                  const renderPickBtn = (room: Room) => {
                     const isSelected = form.roomIds.includes(room.id);
                     const conflict = roomConflictMap.get(room.id);
                     const isBlocked = conflict?.kind === 'block';
@@ -550,6 +551,7 @@ export function BookingFormModal({
 
                     return (
                       <button
+                        key={room.id}
                         type="button"
                         disabled={isDisabled}
                         className={`fp-pick-tile ${isSelected ? 'selected' : ''} ${
@@ -595,8 +597,65 @@ export function BookingFormModal({
                         </div>
                       </button>
                     );
-                  }}
-                />
+                  };
+
+                  const xinyueRooms = activeRooms.filter(
+                    (r) => r.building === 'xinyue'
+                  );
+                  const youdeRooms = activeRooms.filter(
+                    (r) => r.building === 'youde'
+                  );
+
+                  const floorOrder = ['3F', '2F', '1F'];
+                  const floorKeys = Array.from(
+                    new Set(xinyueRooms.map((r) => r.floorLabel || '其他'))
+                  ).sort((a, b) => {
+                    const ia = floorOrder.indexOf(a);
+                    const ib = floorOrder.indexOf(b);
+                    if (ia !== -1 && ib !== -1) return ia - ib;
+                    if (ia !== -1) return -1;
+                    if (ib !== -1) return 1;
+                    return a.localeCompare(b);
+                  });
+
+                  return (
+                    <div className="room-btn-picker">
+                      {xinyueRooms.length > 0 && (
+                        <div className="room-btn-group">
+                          <div className="room-btn-group-title">
+                            <span>{BUILDING_LABELS.xinyue}</span>
+                            <span>{xinyueRooms.length} 間</span>
+                          </div>
+                          {floorKeys.map((floor) => {
+                            const items = xinyueRooms.filter(
+                              (r) => (r.floorLabel || '其他') === floor
+                            );
+                            return (
+                              <div key={floor} className="room-btn-floor-row">
+                                <span className="room-btn-floor-tag">{floor}</span>
+                                <div className="room-btn-grid">
+                                  {items.map(renderPickBtn)}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {youdeRooms.length > 0 && (
+                        <div className="room-btn-group">
+                          <div className="room-btn-group-title">
+                            <span>{BUILDING_LABELS.youde}</span>
+                            <span>{youdeRooms.length} 間</span>
+                          </div>
+                          <div className="room-btn-grid is-youde">
+                            {youdeRooms.map(renderPickBtn)}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
             </div>
 

@@ -114,6 +114,7 @@ const STANDARD_CODES = new Set([
   '獨棟別墅',
   '獨棟木屋',
   '景觀四人兩房木屋',
+  '景觀4人木屋',
 ]);
 
 /**
@@ -510,21 +511,30 @@ export function Campus3DFloorplan({
     );
   };
 
-  /* Coordinates for viewing deck line, lower cabin, and 3-story exploded lodge */
+  /* Coordinates for viewing deck line, lower cabins, and 3-story exploded lodge */
   const deckLeft = iso(-0.4, 3.35, 1.9);
-  const deckRight = iso(6.85, 3.35, 1.9);
+  const deckRight = iso(7.55, 3.35, 1.9);
   const deckDropL = iso(-0.4, 3.35, 0.0);
-  const deckDropR = iso(6.85, 3.35, 0.0);
+  const deckDropR = iso(7.55, 3.35, 0.0);
   const deckBackL = iso(-0.4, 2.75, 1.9);
-  const deckLabel = iso(3.15, 3.22, 1.9);
+  const deckLabel = iso(3.45, 3.22, 1.9);
 
-  const c2x0 = 0.7;
-  const c2x1 = 5.4;
+  /* Lower-left: 景觀四人兩房木屋; Lower-right: 景觀4人木屋 */
+  const c2x0 = 0.25;
+  const c2x1 = 4.15;
   const c2y0 = 3.55;
   const c2y1 = 5.35;
   const c2z = 0.0;
   const c2h = 1.05;
-  const subLowerLabel = iso((c2x0 + c2x1) / 2, c2y1 + 0.55, 0);
+
+  const c4x0 = 4.55;
+  const c4x1 = 7.45;
+  const c4y0 = 3.55;
+  const c4y1 = 5.35;
+  const c4z = 0.0;
+  const c4h = 1.05;
+
+  const subLowerLabel = iso((c2x0 + c4x1) / 2, c2y1 + 0.55, 0);
   const upperTag = iso(3.2, 0.2, 4.3);
 
   const lx0 = 8.1;
@@ -661,7 +671,7 @@ export function Campus3DFloorplan({
       {/* True 3D Axonometric Architectural White Maquette SVG */}
       <div className="campus3d-stage">
         <svg
-          viewBox="0 0 960 494"
+          viewBox="0 0 960 510"
           className="campus3d-svg"
           role="img"
           aria-label="侑德心悅・侑德園 3D 建築園區平面圖"
@@ -741,7 +751,7 @@ export function Campus3DFloorplan({
             ── 大觀景平台 ──
           </text>
 
-          {/* 2. Lower Terrace: 景觀四人兩房木屋 directly beneath viewing deck */}
+          {/* 2. Lower Terrace: 景觀四人兩房木屋 (left) & 景觀4人木屋 (lower-right) */}
           <polygon
             points={pts([
               iso(c2x0 + 0.14, c2y0 + 0.14, 0),
@@ -751,7 +761,7 @@ export function Campus3DFloorplan({
             ])}
             fill={MAQUETTE.shadow}
           />
-          {renderRoomPlate('景觀四人兩房木屋', c2x0, c2y0, c2x1, c2y1, c2z, c2h, 11.5)}
+          {renderRoomPlate('景觀四人兩房木屋', c2x0, c2y0, c2x1, c2y1, c2z, c2h, 11)}
           <line
             x1={iso(c2x0, c2y1, c2z + c2h + 0.06)[0]}
             y1={iso(c2x0, c2y1, c2z + c2h + 0.06)[1]}
@@ -761,6 +771,27 @@ export function Campus3DFloorplan({
             strokeWidth={1}
             opacity={0.45}
           />
+
+          <polygon
+            points={pts([
+              iso(c4x0 + 0.14, c4y0 + 0.14, 0),
+              iso(c4x1 + 0.16, c4y0 + 0.14, 0),
+              iso(c4x1 + 0.16, c4y1 + 0.16, 0),
+              iso(c4x0 + 0.14, c4y1 + 0.16, 0),
+            ])}
+            fill={MAQUETTE.shadow}
+          />
+          {renderRoomPlate('景觀4人木屋', c4x0, c4y0, c4x1, c4y1, c4z, c4h, 11)}
+          <line
+            x1={iso(c4x0, c4y1, c4z + c4h + 0.06)[0]}
+            y1={iso(c4x0, c4y1, c4z + c4h + 0.06)[1]}
+            x2={iso(c4x1, c4y1, c4z + c4h + 0.06)[0]}
+            y2={iso(c4x1, c4y1, c4z + c4h + 0.06)[1]}
+            stroke={MAQUETTE.ink}
+            strokeWidth={1}
+            opacity={0.45}
+          />
+
           <text
             x={subLowerLabel[0]}
             y={subLowerLabel[1]}
@@ -768,7 +799,7 @@ export function Campus3DFloorplan({
             fill={MAQUETTE.inkSoft}
             fontSize={9.5}
           >
-            下層・觀景台正下方
+            下層・觀景台下方
           </text>
 
           {/* 3. Upper-Left Terrace: 獨棟別墅 & 獨棟木屋 */}
@@ -946,14 +977,14 @@ export function Campus3DFloorplan({
 
           {/* Subtle Bottom Mountain Valley Direction Contour */}
           <path
-            d="M 36 468 Q 280 452 520 466 T 924 460"
+            d="M 36 484 Q 280 468 520 482 T 924 476"
             fill="none"
             stroke={MAQUETTE.inkFaint}
             strokeWidth={1}
           />
           <text
             x={480}
-            y={482}
+            y={498}
             textAnchor="middle"
             fill={MAQUETTE.inkSoft}
             fontSize={10}

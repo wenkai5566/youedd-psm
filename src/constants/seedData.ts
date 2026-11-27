@@ -262,6 +262,22 @@ export const INITIAL_XINYUE_ROOMS: Room[] = [
     notes: '兩間獨立臥室、兩台電視、獨立景觀庭園與啤酒桌',
     isActive: true,
   },
+  {
+    id: 'room-cabin-view-4',
+    code: '景觀4人木屋',
+    name: '侑德園・景觀4人木屋',
+    building: 'youde',
+    floorLabel: '獨棟',
+    roomType: '景觀4人木屋',
+    standardCapacity: 4,
+    maxCapacity: 5,
+    standardRate: 3000,
+    weekendRate: 4000,
+    housekeepingStatus: 'clean',
+    sortOrder: 15,
+    notes: '位於景觀台右下方；面向山谷視野，附獨立休憩庭園',
+    isActive: true,
+  },
 ];
 
 /**

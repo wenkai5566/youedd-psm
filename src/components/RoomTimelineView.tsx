@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
+  CalendarDays,
   ChevronLeft,
   ChevronRight,
   LayoutGrid,
@@ -43,6 +44,7 @@ import type {
   RoomBlock,
 } from '../types/domain';
 import { useMediaQuery } from '../hooks/useMediaQuery';
+import { AvailabilityCalendarView } from './AvailabilityCalendarView';
 import type { BookingDraftPreset } from './BookingFormModal';
 import { Campus3DFloorplan } from './Campus3DFloorplan';
 import { FloorplanRoomMap } from './FloorplanRoomMap';
@@ -71,7 +73,7 @@ interface RoomTimelineViewProps {
   onNotifyError: (message: string) => void;
 }
 
-type GridDisplayMode = 'grid' | 'floorplan';
+type GridDisplayMode = 'grid' | 'calendar' | 'floorplan';
 type GanttScale = 'week' | 'fortnight' | 'month';
 type PrenoColorMode = 'status' | 'groups' | 'payments' | 'guests';
 
@@ -628,7 +630,18 @@ export function RoomTimelineView({
   };
 
   const totalCols = ganttDates.length;
-  const colWidthPx = scale === 'month' ? 52 : scale === 'fortnight' ? 84 : 112;
+  const colWidthPx = isTabletOrDesktop
+    ? scale === 'month'
+      ? 52
+      : scale === 'fortnight'
+        ? 84
+        : 112
+    : scale === 'month'
+      ? 42
+      : scale === 'fortnight'
+        ? 50
+        : 62;
+  const roomColWidthPx = isTabletOrDesktop ? (scale === 'week' && isDesktop ? 176 : 156) : 72;
 
   /* Authentic Half-Day Offset geometry: check-in starts at mid-day (+0.5), check-out ends at mid-day (+0.5) */
   const computeHalfDayBarStyle = (startDateISO: string, endDateISO: string) => {
@@ -667,7 +680,9 @@ export function RoomTimelineView({
   const periodTitle =
     displayMode === 'floorplan'
       ? formatShortDateZh(anchorDate, WEEKDAY_ZH)
-      : `${monthYear} 年 ${monthIndex + 1} 月`;
+      : displayMode === 'calendar'
+        ? '月曆查空房'
+        : `${monthYear} 年 ${monthIndex + 1} 月`;
 
   return (
     <section
@@ -679,46 +694,50 @@ export function RoomTimelineView({
       {/* Pure Preno Single White Top Utility Bar */}
       <div className="preno-grid-toolbar">
         <div className="preno-toolbar-left">
-          <div className="preno-date-pill-group">
-            <button
-              id="btn-grid-prev"
-              type="button"
-              className="preno-step-btn"
-              aria-label="上一區間"
-              onClick={() => shiftDate(-1)}
-            >
-              <ChevronLeft size={16} />
-            </button>
-            <button
-              id="btn-grid-today"
-              type="button"
-              className="preno-step-today"
-              onClick={() => setAnchorDate(todayISO)}
-            >
-              今天
-            </button>
-            <button
-              id="btn-grid-next"
-              type="button"
-              className="preno-step-btn"
-              aria-label="下一區間"
-              onClick={() => shiftDate(1)}
-            >
-              <ChevronRight size={16} />
-            </button>
-          </div>
+          {displayMode !== 'calendar' && (
+            <div className="preno-date-pill-group">
+              <button
+                id="btn-grid-prev"
+                type="button"
+                className="preno-step-btn"
+                aria-label="上一區間"
+                onClick={() => shiftDate(-1)}
+              >
+                <ChevronLeft size={16} />
+              </button>
+              <button
+                id="btn-grid-today"
+                type="button"
+                className="preno-step-today"
+                onClick={() => setAnchorDate(todayISO)}
+              >
+                今天
+              </button>
+              <button
+                id="btn-grid-next"
+                type="button"
+                className="preno-step-btn"
+                aria-label="下一區間"
+                onClick={() => shiftDate(1)}
+              >
+                <ChevronRight size={16} />
+              </button>
+            </div>
+          )}
 
           <span className="preno-period-label tabular-nums">{periodTitle}</span>
 
-          <div className="desktop-only-flex" style={{ width: 146 }}>
-            <SmartDateInput
-              id="input-grid-jump-date"
-              ariaLabel="跳轉日期"
-              value={anchorDate}
-              className="smart-date-compact"
-              onChange={setAnchorDate}
-            />
-          </div>
+          {displayMode !== 'calendar' && (
+            <div className="desktop-only-flex" style={{ width: 146 }}>
+              <SmartDateInput
+                id="input-grid-jump-date"
+                ariaLabel="跳轉日期"
+                value={anchorDate}
+                className="smart-date-compact"
+                onChange={setAnchorDate}
+              />
+            </div>
+          )}
 
           {/* Inline Guest Search with Live Jump Dropdown (Preno Native Top Bar) */}
           <div className="preno-grid-search desktop-only-flex">
@@ -835,20 +854,41 @@ export function RoomTimelineView({
             </div>
           )}
 
-          {/* Grid / Floorplan Toggle */}
-          <button
-            id="btn-toggle-floorplan"
-            type="button"
-            className={`btn btn-sm ${
-              displayMode === 'floorplan' ? 'btn-teal-outline' : 'btn-secondary'
-            }`}
-            onClick={() =>
-              setDisplayMode((m) => (m === 'grid' ? 'floorplan' : 'grid'))
-            }
-          >
-            <LayoutGrid size={14} />
-            <span>{displayMode === 'floorplan' ? '回房態格' : '樓層平面'}</span>
-          </button>
+          {/* 3-Way Mode Switcher: 時間軸 | 月曆 | 樓層平面 */}
+          <div className="preno-range-group" role="tablist" aria-label="檢視方式">
+            <button
+              id="btn-mode-grid"
+              type="button"
+              role="tab"
+              aria-selected={displayMode === 'grid'}
+              className={`preno-range-btn ${displayMode === 'grid' ? 'active' : ''}`}
+              onClick={() => setDisplayMode('grid')}
+            >
+              時間軸
+            </button>
+            <button
+              id="btn-mode-calendar"
+              type="button"
+              role="tab"
+              aria-selected={displayMode === 'calendar'}
+              className={`preno-range-btn ${displayMode === 'calendar' ? 'active' : ''}`}
+              onClick={() => setDisplayMode('calendar')}
+            >
+              <CalendarDays size={13} style={{ verticalAlign: '-2px', marginRight: 3 }} />
+              月曆
+            </button>
+            <button
+              id="btn-toggle-floorplan"
+              type="button"
+              role="tab"
+              aria-selected={displayMode === 'floorplan'}
+              className={`preno-range-btn ${displayMode === 'floorplan' ? 'active' : ''}`}
+              onClick={() => setDisplayMode('floorplan')}
+            >
+              <LayoutGrid size={13} style={{ verticalAlign: '-2px', marginRight: 3 }} />
+              平面
+            </button>
+          </div>
 
           <button
             id="btn-open-room-block"
@@ -872,8 +912,33 @@ export function RoomTimelineView({
         </div>
       </div>
 
-      {/* ==================== ARCHITECTURAL FLOORPLAN SINGLE-DAY VIEW ==================== */}
-      {displayMode === 'floorplan' ? (() => {
+      {/* ==================== MONTHLY AVAILABILITY CALENDAR VIEW ==================== */}
+      {displayMode === 'calendar' ? (
+        <AvailabilityCalendarView
+          rooms={activeRooms}
+          bookings={bookings}
+          roomBlocks={roomBlocks}
+          specialHolidayDates={specialHolidayDates}
+          todayISO={todayISO}
+          anchorDate={anchorDate}
+          onSelectDateChange={setAnchorDate}
+          onJumpToFloorplan={(dateISO) => {
+            setAnchorDate(dateISO);
+            setDisplayMode('floorplan');
+          }}
+          onJumpToGrid={(dateISO) => {
+            setAnchorDate(dateISO);
+            setDisplayMode('grid');
+          }}
+          onBookRoomOnDate={(room, dateISO) =>
+            onCreateBookingAt({
+              roomIds: [room.id],
+              checkInDate: dateISO,
+              checkOutDate: addDaysISO(dateISO, 1),
+            })
+          }
+        />
+      ) : displayMode === 'floorplan' ? (() => {
         const renderFlatRoomTile = (room: Room) => {
           const staying = floorplanData.stayMap.get(room.id);
           const departing = floorplanData.departMap.get(room.id);
@@ -1134,14 +1199,17 @@ export function RoomTimelineView({
               style={{
                 gridTemplateColumns:
                   scale === 'week' && isDesktop
-                    ? `176px repeat(${totalCols}, minmax(112px, 1fr))`
-                    : `156px repeat(${totalCols}, ${colWidthPx}px)`,
+                    ? `${roomColWidthPx}px repeat(${totalCols}, minmax(112px, 1fr))`
+                    : `${roomColWidthPx}px repeat(${totalCols}, ${colWidthPx}px)`,
               }}
             >
               {/* Top-left corner */}
               <div className="preno-grid-corner">
                 <span>房間</span>
-                <span className="tabular-nums" style={{ fontWeight: 500, color: 'var(--ink-muted)' }}>
+                <span
+                  className="tabular-nums preno-grid-corner-count"
+                  style={{ fontWeight: 500, color: 'var(--ink-muted)' }}
+                >
                   {activeRooms.length}間
                 </span>
               </div>
@@ -1216,33 +1284,44 @@ export function RoomTimelineView({
 
                     return (
                       <div key={room.id} className="preno-grid-row">
-                        {/* Sticky Left Room Cell with Preno Broom Icon */}
-                        <div className="preno-room-cell">
+                        {/* Sticky Left Room Cell (slim 72px on mobile, full with broom on tablet/desktop) */}
+                        <div
+                          className="preno-room-cell"
+                          title={`${room.name}（${HOUSEKEEPING_LABELS[room.housekeepingStatus]}）`}
+                        >
                           <div className="preno-room-cell-main">
                             <span className="preno-room-cell-code">
                               {room.code}
+                              {!isTabletOrDesktop && isDirty && (
+                                <span
+                                  className="preno-mobile-dirty-dot"
+                                  aria-label="待清掃"
+                                />
+                              )}
                             </span>
                             <span className="preno-room-cell-sub tabular-nums">
                               {room.floorLabel}・${room.standardRate.toLocaleString()}
                             </span>
                           </div>
-                          <button
-                            type="button"
-                            className={`preno-broom-btn ${
-                              isDirty ? 'is-dirty' : 'is-clean'
-                            }`}
-                            title={`${HOUSEKEEPING_LABELS[room.housekeepingStatus]}（點擊切換）`}
-                            aria-label={`${room.code} ${HOUSEKEEPING_LABELS[room.housekeepingStatus]}，點擊切換`}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              void onToggleHousekeeping(
-                                room.id,
-                                isDirty ? 'clean' : 'dirty'
-                              );
-                            }}
-                          >
-                            <BroomIcon size={15} />
-                          </button>
+                          {isTabletOrDesktop && (
+                            <button
+                              type="button"
+                              className={`preno-broom-btn ${
+                                isDirty ? 'is-dirty' : 'is-clean'
+                              }`}
+                              title={`${HOUSEKEEPING_LABELS[room.housekeepingStatus]}（點擊切換）`}
+                              aria-label={`${room.code} ${HOUSEKEEPING_LABELS[room.housekeepingStatus]}，點擊切換`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                void onToggleHousekeeping(
+                                  room.id,
+                                  isDirty ? 'clean' : 'dirty'
+                                );
+                              }}
+                            >
+                              <BroomIcon size={15} />
+                            </button>
+                          )}
                         </div>
 
                         {/* Day Cells Track */}

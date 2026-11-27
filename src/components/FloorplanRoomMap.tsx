@@ -15,7 +15,7 @@ const XINYUE_FLOOR_BLUEPRINT = [
 ] as const;
 
 const YOUDE_UPPER_CODES = ['獨棟別墅', '獨棟木屋'] as const;
-const YOUDE_LOWER_CODES = ['景觀四人兩房木屋'] as const;
+const YOUDE_LOWER_CODES = ['景觀四人兩房木屋', '景觀4人木屋'] as const;
 
 /**
  * Renders guesthouse rooms in an authentic minimalist elevation layout (Option A):

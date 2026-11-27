@@ -32,13 +32,13 @@ import type {
 import { getEnvAllowedEmails } from './firebaseConfig';
 import type { DemoSignInAccount, GuesthouseRepository } from './repository';
 
-const STORAGE_KEY_ROOMS = 'xinyue_pms_v6_rooms';
-const STORAGE_KEY_BOOKINGS = 'xinyue_pms_v6_bookings';
-const STORAGE_KEY_BLOCKS = 'xinyue_pms_v6_blocks';
-const STORAGE_KEY_ACCESS = 'xinyue_pms_v6_access';
-const STORAGE_KEY_HOLIDAYS = 'xinyue_pms_v6_holidays';
-const STORAGE_KEY_AUTH = 'xinyue_pms_v6_auth';
-const SYNC_CHANNEL_NAME = 'xinyue_pms_realtime_sync_v6';
+const STORAGE_KEY_ROOMS = 'xinyue_pms_v7_rooms';
+const STORAGE_KEY_BOOKINGS = 'xinyue_pms_v7_bookings';
+const STORAGE_KEY_BLOCKS = 'xinyue_pms_v7_blocks';
+const STORAGE_KEY_ACCESS = 'xinyue_pms_v7_access';
+const STORAGE_KEY_HOLIDAYS = 'xinyue_pms_v7_holidays';
+const STORAGE_KEY_AUTH = 'xinyue_pms_v7_auth';
+const SYNC_CHANNEL_NAME = 'xinyue_pms_realtime_sync_v7';
 
 function readJson<T>(key: string, fallback: () => T): T {
   try {

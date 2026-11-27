@@ -1,0 +1,26 @@
+{
+  "name": "侑德訂房（侑德心悅・侑德園）",
+  "short_name": "侑德訂房",
+  "description": "拉拉山侑德心悅、侑德園民宿內部訂房與房務管理系統",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#FFFFFF",
+  "theme_color": "#25313E",
+  "lang": "zh-TW",
+  "icons": [
+    {
+      "src": "./icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

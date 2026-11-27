@@ -1,0 +1,76 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Strictly restrict all database access to an authorized whitelist of up to 5 verified Google emails.
+    // Replace the fallback list below with your actual staff Gmail addresses before deploying,
+    // or manage them in /config/accessControl (capped at 5 emails).
+    function isAuthenticatedVerifiedUser() {
+      return request.auth != null
+        && request.auth.token.email != null
+        && request.auth.token.email_verified == true;
+    }
+
+    function normalizedEmail() {
+      return request.auth.token.email.lower();
+    }
+
+    function isInBootstrapWhitelist() {
+      return normalizedEmail() in [
+        'owner@xinyue.tw',
+        'frontdesk@xinyue.tw',
+        'manager@xinyue.tw'
+      ];
+    }
+
+    function isInDynamicWhitelist() {
+      return exists(/databases/$(database)/documents/config/accessControl)
+        && get(/databases/$(database)/documents/config/accessControl).data.allowedEmails is list
+        && normalizedEmail() in get(/databases/$(database)/documents/config/accessControl).data.allowedEmails;
+    }
+
+    function isAuthorizedStaff() {
+      return isAuthenticatedVerifiedUser()
+        && (isInBootstrapWhitelist() || isInDynamicWhitelist());
+    }
+
+    // Access control document: only authorized staff can read/update (at least 1 email required).
+    match /config/accessControl {
+      allow read: if isAuthorizedStaff();
+      allow write: if isAuthorizedStaff()
+        && request.resource.data.allowedEmails is list
+        && request.resource.data.allowedEmails.size() >= 1;
+    }
+
+    // Custom special holiday / peak pricing dates (e.g. Lunar New Year, long weekends, peach season).
+    match /config/specialHolidays {
+      allow read, write: if isAuthorizedStaff();
+    }
+
+    // Guesthouse rooms collection (up to 15 rooms).
+    match /rooms/{roomId} {
+      allow read, write: if isAuthorizedStaff();
+    }
+
+    // Guest booking records containing sensitive PII.
+    match /bookings/{bookingId} {
+      allow read, write: if isAuthorizedStaff();
+    }
+
+    // Maintenance / owner room blocks (prevent double-booking without counting toward revenue).
+    match /roomBlocks/{blockId} {
+      allow read, write: if isAuthorizedStaff();
+    }
+
+    // Atomic night locks preventing race-condition double bookings:
+    // Document ID format: {roomId}_{YYYY-MM-DD}
+    match /roomNightLocks/{lockId} {
+      allow read, write: if isAuthorizedStaff();
+    }
+
+    // Deny everything else by default.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

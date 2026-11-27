@@ -1,0 +1,108 @@
+/* Pure Native Preno Design Tokens (Xero-inspired minimalist hospitality PMS) */
+:root {
+  /* Core Preno Navy-Slate & Mint-Teal Brand */
+  --rail-bg: #25313e;
+  --rail-hover: #314152;
+  --rail-active-bg: #1c2630;
+  --brand-teal: #00b8a9;
+  --brand-teal-hover: #009e91;
+  --brand-teal-soft: #e6f8f6;
+  --brand-teal-ink: #00756b;
+
+  /* Compatibility aliases so existing form/modal components stay cohesive */
+  --accent-pine: #00b8a9;
+  --accent-pine-hover: #009e91;
+  --accent-pine-soft: #e6f8f6;
+  --accent-pine-ink: #00756b;
+  --accent-cedar: #3898ec;
+  --accent-cedar-soft: #fef6e7;
+  --accent-cedar-border: #f5d69b;
+
+  /* Pure White Surfaces & Cool Mist Accents */
+  --bg-canvas: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-subtle: #f1f5f9;
+  --bg-muted: #e6eaee;
+  --bg-weekend: #f4f6f9;
+  --bg-today-tint: #eefaf9;
+
+  /* Crisp Charcoal Ink */
+  --ink-primary: #1e293b;
+  --ink-secondary: #475569;
+  --ink-tertiary: #64748b;
+  --ink-muted: #64748b;
+  --ink-faint: #94a3b8;
+  --ink-inverse: #ffffff;
+
+  /* Hairline Borders */
+  --border-subtle: #e6eaee;
+  --border-strong: #cbd5e1;
+
+  /* Authentic Preno Status Palette */
+  --status-confirmed: #3898ec;
+  --status-confirmed-soft: #ebf5fe;
+  --status-confirmed-fg: #1d6fb8;
+
+  --status-checkedin: #2ecc71;
+  --status-checkedin-bar: #27b865;
+  --status-checkedin-soft: #e9f9f0;
+  --status-checkedin-fg: #187a42;
+
+  --status-awaiting: #f39c12;
+  --status-awaiting-soft: #fef5e6;
+  --status-awaiting-fg: #a66506;
+
+  --status-overdue: #e74c3c;
+  --status-overdue-soft: #fdeceb;
+  --status-overdue-fg: #b82c1e;
+
+  --status-checkedout: #bdc3c7;
+  --status-checkedout-soft: #f1f5f9;
+  --status-checkedout-fg: #475569;
+
+  --status-cancelled-bg: #f1f5f9;
+  --status-cancelled-fg: #64748b;
+
+  /* Compatibility tone tokens */
+  --tone-awaiting-bar: #f39c12;
+  --tone-awaiting-bg: #fef5e6;
+  --tone-awaiting-border: #f7d9a4;
+  --tone-awaiting-ink: #a66506;
+  --tone-overdue-bar: #e74c3c;
+  --tone-overdue-bg: #fdeceb;
+  --tone-overdue-border: #f5b7b1;
+  --tone-overdue-ink: #b82c1e;
+
+  /* Semantic Alerts */
+  --danger-fg: #c0392b;
+  --danger-bg: #fdeceb;
+  --danger-border: #f5b7b1;
+  --success-fg: #187a42;
+  --success-bg: #e9f9f0;
+
+  /* Typography */
+  --font-sans: 'Inter', 'Noto Sans TC', -apple-system, BlinkMacSystemFont,
+    'PingFang TC', 'Microsoft JhengHei', sans-serif;
+
+  /* Radii */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-pill: 999px;
+
+  /* Minimal Shadows (only elevated popovers/modals/drawers) */
+  --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.05);
+  --shadow-sm: 0 4px 12px rgba(15, 23, 42, 0.08);
+  --shadow-md: 0 10px 28px rgba(15, 23, 42, 0.12);
+  --shadow-lg: 0 20px 50px rgba(15, 23, 42, 0.18);
+
+  /* Layout Metrics */
+  --rail-width: 68px;
+  --mobile-header-height: 54px;
+  --mobile-tabs-height: 60px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-top: env(safe-area-inset-top, 0px);
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+}
